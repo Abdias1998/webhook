@@ -76,20 +76,20 @@ exports.login = async (req, res) => {
 
 exports.webhook = async (req, res) => {
   try {
-    const { reference,email } = req.body;
+    // const { reference,email } = req.body;
     
     // Vérifier si l'utilisateur existe
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: "Utilisateur non trouvé" });
-    }
-// Si l'user exixte enregistrer la reference dans la base de données
-    user.reference.push(reference);
-    await user.save();
-    res.json({
-      message: "Webhook reçu avec succès",
-      user
-    });
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       return res.status(401).json({ message: "Utilisateur non trouvé" });
+//     }
+// // Si l'user exixte enregistrer la reference dans la base de données
+//     user.reference.push(reference);
+//     await user.save();
+//     res.json({
+//       message: "Webhook reçu avec succès",
+//       user
+//     });
   } catch (error) {
     res.status(500).json({ message: "Erreur lors de la connexion", error: error.message }); 
   }
