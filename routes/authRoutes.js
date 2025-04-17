@@ -4,6 +4,6 @@ const authController = require('../controllers/authController');
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-router.post('/webhook', authController.feexpayWebhook);
+router.post('/webhook', authController.webhook);
 
 module.exports = router;
