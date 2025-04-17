@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
   ],
   status: {
     type: String,
-    enum: ['PENDING', 'SUCCESS', 'FAILED'],
+    enum: ['PENDING', 'SUCCESSFUL', 'FAILED'],
     default: 'PENDING'
   },
   createdAt: {
