@@ -109,9 +109,7 @@ exports.webhook = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
-    user.reference.push(reference);
-    user.status = status;
-    await user.save();
+   
     
     if (status === 'SUCCESSFUL') {
       const mailOptions = {
@@ -122,6 +120,9 @@ exports.webhook = async (req, res) => {
       };
 
       await transporter.sendMail(mailOptions);
+      user.reference.push(reference);
+      user.status = status;
+      await user.save();
     }
 
     res.status(200).json({ message: "Webhook traité avec succès." });
