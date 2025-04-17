@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema({
     required: true
   },
   reference:[String],
+  status: {
+    type: String,
+    enum: ['PENDING', 'SUCCESS', 'FAILED'],
+    default: 'PENDING'
+  },
   createdAt: {
     type: Date,
     default: Date.now
