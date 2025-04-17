@@ -1,7 +1,6 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -83,56 +82,62 @@ exports.login = async (req, res) => {
 
 // webhookController.js
 
-// controllers/feexpayWebhookController.js
-
-
-exports.feexpayWebhook = async (req, res) => {
+exports.webhook = async (req, res) => {
   try {
+    const payload = req.body;
+
     const {
       reference,
       status,
       amount,
-      first_name,
+      callback_info,
       last_name,
+      first_name,
       email,
-      phoneNumber,
       type,
+      phoneNumber,
       date,
       reseau,
       ref_link,
-    } = req.body;
+    } = payload;
 
-    console.log('Webhook reçu :', req.body);
+    // Log pour vérification (à supprimer en prod)
+    console.log("Webhook reçu de FeexPay :", payload);
 
-    if (status === 'FAILED') {
-      // 👉 Action personnalisée : envoyer un mail de remerciement
-     
-      const mailOptions = {
-        from: `"FeexPay" <${process.env.user}>`,
-        to: email,
-        subject: 'Merci pour votre paiement ! 🙏',
-        html: `
-          <h2>Bonjour ${first_name},</h2>
-          <p>Nous avons bien reçu votre paiement de <strong>${amount} FCFA</strong>.</p>
-          <p>Merci de votre confiance !</p>
-          <p>Référence : ${reference}</p>
-        `,
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log('Mail envoyé à', email);
+    // Exemple de traitement :
+    // 1. Vérifier si la transaction existe déjà dans la BDD (optionnel selon logique)
+    const transaction = await User.findOne({ reference });
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction non trouvée" });
     }
+    // 2. Enregistrer ou mettre à jour la transaction
+    transaction.status = status;
+    await transaction.save();
+    
+    // 3. Modifier l’état d’une commande liée à cette transaction (si applicable)
+  
+    // 4. Envoi d'un email ou d'une notification si besoin
+    
 
-    // Tu peux aussi enregistrer la transaction dans la base de données ici
+    const mailOptions = {
+      from: process.env.user,
+      to: email,
+      subject: 'Transaction traitée',
+      text: `La transaction ${reference} a été traitée avec succès.`,
+    };
 
-    res.status(200).json({ message: 'Webhook reçu avec succès' });
+    await transporter.sendMail(mailOptions);
+
+    // Exemple basique (fictif) avec MongoDB :
+    // await Transaction.create({ ...payload }); 
+    // ou
+    // await Transaction.updateOne({ reference }, { status });
+
+    res.status(200).json({ message: "Webhook traité avec succès." });
   } catch (error) {
-    console.error('Erreur webhook :', error.message);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error("Erreur traitement webhook :", error);
+    res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
   }
 };
-
-
-
 
 
