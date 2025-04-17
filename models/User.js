@@ -12,7 +12,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  reference:[String],
+  reference:[
+    String
+  ],
   status: {
     type: String,
     enum: ['PENDING', 'SUCCESS', 'FAILED'],
