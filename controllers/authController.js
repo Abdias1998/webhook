@@ -83,7 +83,7 @@ exports.login = async (req, res) => {
 // webhookController.js
 
 // controllers/feexpayWebhookController.js
-const nodemailer = require('nodemailer');
+
 
 exports.feexpayWebhook = async (req, res) => {
   try {
@@ -105,14 +105,7 @@ exports.feexpayWebhook = async (req, res) => {
 
     if (status === 'FAILED') {
       // 👉 Action personnalisée : envoyer un mail de remerciement
-      const transporter = nodemailer.createTransport({
-        service: 'gmail', // ou un autre fournisseur
-        auth: {
-          user: process.env.user,
-          pass: process.env.pass,
-        },
-      });
-
+     
       const mailOptions = {
         from: `"FeexPay" <${process.env.user}>`,
         to: email,
@@ -138,7 +131,7 @@ exports.feexpayWebhook = async (req, res) => {
   }
 };
 
-module.exports = { feexpayWebhook };
-;
+
+
 
 
