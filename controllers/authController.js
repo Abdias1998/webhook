@@ -82,62 +82,63 @@ exports.login = async (req, res) => {
 
 // webhookController.js
 
-exports.webhook = async (req, res) => {
-  try {
-    const payload = req.body;
+// controllers/feexpayWebhookController.js
+const nodemailer = require('nodemailer');
 
+exports.feexpayWebhook = async (req, res) => {
+  try {
     const {
       reference,
       status,
       amount,
-      callback_info,
-      last_name,
       first_name,
+      last_name,
       email,
-      type,
       phoneNumber,
+      type,
       date,
       reseau,
       ref_link,
-    } = payload;
+    } = req.body;
 
-    // Log pour vérification (à supprimer en prod)
-    console.log("Webhook reçu de FeexPay :", payload);
+    console.log('Webhook reçu :', req.body);
 
-    // Exemple de traitement :
-    // 1. Vérifier si la transaction existe déjà dans la BDD (optionnel selon logique)
-    const transaction = await User.findOne({ reference });
-    if (!transaction) {
-      return res.status(404).json({ message: "Transaction non trouvée" });
+    if (status === 'FAILED') {
+      // 👉 Action personnalisée : envoyer un mail de remerciement
+      const transporter = nodemailer.createTransport({
+        service: 'gmail', // ou un autre fournisseur
+        auth: {
+          user: process.env.user,
+          pass: process.env.pass,
+        },
+      });
+
+      const mailOptions = {
+        from: `"FeexPay" <${process.env.user}>`,
+        to: email,
+        subject: 'Merci pour votre paiement ! 🙏',
+        html: `
+          <h2>Bonjour ${first_name},</h2>
+          <p>Nous avons bien reçu votre paiement de <strong>${amount} FCFA</strong>.</p>
+          <p>Merci de votre confiance !</p>
+          <p>Référence : ${reference}</p>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log('Mail envoyé à', email);
     }
-    // 2. Enregistrer ou mettre à jour la transaction
-    transaction.status = status;
-    await transaction.save();
-    
-    // 3. Modifier l’état d’une commande liée à cette transaction (si applicable)
-  
-    // 4. Envoi d'un email ou d'une notification si besoin
-    
 
-    const mailOptions = {
-      from: process.env.user,
-      to: email,
-      subject: 'Transaction traitée',
-      text: `La transaction ${reference} a été traitée avec succès.`,
-    };
+    // Tu peux aussi enregistrer la transaction dans la base de données ici
 
-    await transporter.sendMail(mailOptions);
-
-    // Exemple basique (fictif) avec MongoDB :
-    // await Transaction.create({ ...payload }); 
-    // ou
-    // await Transaction.updateOne({ reference }, { status });
-
-    res.status(200).json({ message: "Webhook traité avec succès." });
+    res.status(200).json({ message: 'Webhook reçu avec succès' });
   } catch (error) {
-    console.error("Erreur traitement webhook :", error);
-    res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
+    console.error('Erreur webhook :', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 };
+
+module.exports = { feexpayWebhook };
+;
 
 
