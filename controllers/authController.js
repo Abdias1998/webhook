@@ -2,6 +2,16 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer')
+const { Feexpay } = require('feexpay-sdk');
+// Initialisation du SDK avec vos clés Feexpay
+const feexpay = new Feexpay(
+  process.env.FEEXPAY_API_KEY,
+  {
+    mode: 'LIVE',         // 'LIVE' ou 'TEST'
+    timeout: 30000,       // Timeout des requêtes (en ms)
+    maxRetries: 3         // Nombre de tentatives en cas d’échec
+  }
+);
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -80,7 +90,30 @@ exports.login = async (req, res) => {
 
   }
 };
+exports.payments = async (req, res) => {
+  try {
+    const payment = await feexpay.payment.createTransaction({
+      amount: req.body.amount,
+      shop: req.body.shop,
+      callback_info: req.body.callback_info,
+      phoneNumber: req.body.phoneNumber,
+      motif: req.body.motif,
+      network: req.body.network,
+      email: req.body.email
+    });
 
+    return res.json(payment);
+
+  } catch (error) {
+    res.status(400).json({ 
+      success: false,
+      error: {
+        message: error.message,
+        code: error.code || 'PAYMENT_FAILED'
+      }
+    });
+  }
+};
 // webhookController.js
 
 exports.webhook = async (req, res) => {
