@@ -1,37 +1,38 @@
-require('dotenv').config();
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer')
-const { Feexpay } = require('feexpay-sdk');
+import { config } from 'dotenv';
+config();
+import User, { findOne } from '../models/User';
+import { hash, compare } from 'bcryptjs';
+import { sign } from 'jsonwebtoken';
+import { createTransport } from 'nodemailer';
+import { Feexpay } from 'feexpay-sdk';
 // Initialisation du SDK avec vos clés Feexpay
 const feexpay = new Feexpay(
-  "fp_HHNoQGt9Vn8KpZoLaBkG3uEeKpLUYBaHUZIZXJE3Xgv0OKG2tK3A7PtlytctikrJ",
+  process.env.FEEXPAY_API_KEY,
   {
     mode: 'LIVE',         // 'LIVE' ou 'TEST'
     timeout: 30000,       // Timeout des requêtes (en ms)
     maxRetries: 3         // Nombre de tentatives en cas d’échec
   }
 );
-const transporter = nodemailer.createTransport({
+const transporter = createTransport({
   service: 'gmail',
   auth: {
     user: process.env.user,
     pass: process.env.pass
   }
 });
-exports.register = async (req, res) => {
+export async function register(req, res) {
   try {
     const { email, password } = req.body;
 
     // Vérifier si l'utilisateur existe déjà
-    const existingUser = await User.findOne({ email });
+    const existingUser = await findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Cet email est déjà utilisé" });
     }
 
     // Hasher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hash(password, 10);
 
     // Créer un nouvel utilisateur
     const user = new User({
@@ -42,7 +43,7 @@ exports.register = async (req, res) => {
     await user.save();
 
     // Créer le token JWT
-    const token = jwt.sign(
+    const token = sign(
       { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
@@ -56,26 +57,26 @@ exports.register = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Erreur lors de l'inscription", error: error.message });
   }
-};
+}
 
-exports.login = async (req, res) => {
+export async function login(req, res) {
   try {
     const { email, password } = req.body;
 
     // Vérifier si l'utilisateur existe
-    const user = await User.findOne({ email });
+    const user = await findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "Email ou mot de passe incorrect" });
     }
 
     // Vérifier le mot de passe
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await compare(password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({ message: "Email ou mot de passe incorrect" });
     }
 
     // Créer le token JWT
-    const token = jwt.sign(
+    const token = sign(
       { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
@@ -90,8 +91,8 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: "Erreur lors de la connexion", error: error.message }); 
 
   }
-};
-exports.payments = async (req, res) => {
+}
+export async function payments(req, res) {
   try {
     const payment = await feexpay.payment.createGlobal({
       amount: req.body.amount,
@@ -114,10 +115,10 @@ exports.payments = async (req, res) => {
       }
     });
   }
-};
+}
 // webhookController.js
 
-exports.webhook = async (req, res) => {
+export async function webhook(req, res) {
   try {
     const payload = req.body;
 
@@ -139,7 +140,7 @@ exports.webhook = async (req, res) => {
     // Log pour vérification (à supprimer en prod)
     console.log("Webhook reçu de FeexPay :", payload);
 
-    const user = await User.findOne({ email });
+    const user = await findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
@@ -164,6 +165,6 @@ exports.webhook = async (req, res) => {
     console.error("Erreur traitement webhook :", error);
     res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
   }
-};
+}
 
 
