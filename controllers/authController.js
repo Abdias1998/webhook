@@ -92,7 +92,7 @@ exports.login = async (req, res) => {
 };
 exports.payments = async (req, res) => {
   try {
-    const payment = await feexpay.payment.createTransaction({
+    const payment = await feexpay.payment.createGlobal({
       amount: req.body.amount,
       shop: req.body.shop,
       callback_info: req.body.callback_info,
