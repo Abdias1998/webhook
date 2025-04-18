@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer')
 const { Feexpay } = require('feexpay-sdk');
 // Initialisation du SDK avec vos clés Feexpay
 const feexpay = new Feexpay(
-  process.env.FEEXPAY_API_KEY,
+  "fp_HHNoQGt9Vn8KpZoLaBkG3uEeKpLUYBaHUZIZXJE3Xgv0OKG2tK3A7PtlytctikrJ",
   {
     mode: 'LIVE',         // 'LIVE' ou 'TEST'
     timeout: 30000,       // Timeout des requêtes (en ms)
