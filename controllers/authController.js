@@ -160,7 +160,7 @@ export async function webhook(req, res) {
       await user.save();
     }
 
-    res.status(200).json({ message: "Webhook traité avec succès." });
+    // res.status(200).json({ message: "Webhook traité avec succès." });
   } catch (error) {
     console.error("Erreur traitement webhook :", error);
     res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
