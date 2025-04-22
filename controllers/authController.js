@@ -1,10 +1,10 @@
-import { config } from 'dotenv';
-config();
-import User, { findOne } from '../models/User';
-import { hash, compare } from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
-import { createTransport } from 'nodemailer';
-import { Feexpay } from 'feexpay-sdk';
+require('dotenv').config();
+const User = require('../models/User');
+const { hash, compare } = require('bcryptjs');
+const { sign } = require('jsonwebtoken');
+const { createTransport } = require('nodemailer');
+const { Feexpay } = require('feexpay-sdk');
+const mongoose = require('mongoose');
 // Initialisation du SDK avec vos clés Feexpay
 const feexpay = new Feexpay(
   process.env.FEEXPAY_API_KEY,
@@ -21,12 +21,12 @@ const transporter = createTransport({
     pass: process.env.pass
   }
 });
-export async function register(req, res) {
+exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Vérifier si l'utilisateur existe déjà
-    const existingUser = await findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Cet email est déjà utilisé" });
     }
@@ -38,7 +38,7 @@ export async function register(req, res) {
     const user = new User({
       email,
       password: hashedPassword
-    });
+    });   
 
     await user.save();
 
@@ -59,12 +59,12 @@ export async function register(req, res) {
   }
 }
 
-export async function login(req, res) {
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Vérifier si l'utilisateur existe
-    const user = await findOne({ email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "Email ou mot de passe incorrect" });
     }
@@ -92,7 +92,7 @@ export async function login(req, res) {
 
   }
 }
-export async function payments(req, res) {
+exports.payments = async (req, res) => {
   try {
     const payment = await feexpay.payment.createGlobal({
       amount: req.body.amount,
@@ -118,7 +118,7 @@ export async function payments(req, res) {
 }
 // webhookController.js
 
-export async function webhook(req, res) {
+exports.webhook = async (req, res) => {
   try {
     const payload = req.body;
 
@@ -166,5 +166,6 @@ export async function webhook(req, res) {
     res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
   }
 }
+
 
 
