@@ -139,25 +139,25 @@ exports.webhook = async (req, res) => {
 
     // Log pour vérification (à supprimer en prod)
     console.log("Webhook reçu de FeexPay :", payload);
-  const user = await User.findOne({ email }); // Correction ici
-    if (!user) {
-      return res.status(404).json({ message: "Utilisateur non trouvé" });
-    }
+  // const user = await User.findOne({ email }); // Correction ici
+    // if (!user) {
+    //   return res.status(404).json({ message: "Utilisateur non trouvé" });
+    // }
    
     
-    if (status === 'SUCCESSFUL') {
-      const mailOptions = {
-        from: process.env.user,
-        to: email,
-        subject: 'Transaction traitée',
-        text: `La transaction ${reference} a été traitée avec succès.`,
-      };
+    // if (status === 'SUCCESSFUL') {
+    //   const mailOptions = {
+    //     from: process.env.user,
+    //     to: email,
+    //     subject: 'Transaction traitée',
+    //     text: `La transaction ${reference} a été traitée avec succès.`,
+    //   };
 
-      await transporter.sendMail(mailOptions);
-      user.reference.push(reference);
-      user.status = status;
-      await user.save();
-    }
+    //   await transporter.sendMail(mailOptions);
+    //   user.reference.push(reference);
+    //   user.status = status;
+    //   await user.save();
+    // }
 
     // res.status(200).json({ message: "Webhook traité avec succès." });
   } catch (error) {
