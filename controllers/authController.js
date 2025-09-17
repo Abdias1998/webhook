@@ -145,19 +145,74 @@ exports.webhook = async (req, res) => {
     // }
    
     
-    // if (status === 'SUCCESSFUL') {
-    //   const mailOptions = {
-    //     from: process.env.user,
-    //     to: email,
-    //     subject: 'Transaction traitée',
-    //     text: `La transaction ${reference} a été traitée avec succès.`,
-    //   };
+   if (status === 'SUCCESSFUL') {
+  const mailOptions = {
+    from: process.env.user,
+    to: email,
+    subject: 'Transaction traitée',
+    text: `La transaction ${reference} a été traitée avec succès.`,
+  };
 
-    //   await transporter.sendMail(mailOptions);
-    //   user.reference.push(reference);
-    //   user.status = status;
-    //   await user.save();
-    // }
+  try {
+    const response = await fetch(`https://api.feexpay.me/api/transactions/public/single/status/${reference}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.FEEXPAY_TOKEN}`, // sécurise ton token
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Réponse API:", data);
+
+  } catch (error) {
+    console.error("Erreur lors de l'appel API:", error);
+  }
+}
+
+
+          
+      if (status === 'FAILED') {
+  const mailOptions = {
+    from: process.env.user,
+    to: email,
+    subject: 'Transaction traitée',
+    text: `La transaction ${reference} a échouer`,
+  };
+
+  try {
+    const response = await fetch(`https://api.feexpay.me/api/transactions/public/single/status/${reference}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.FEEXPAY_TOKEN}`, // sécurise ton token
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Réponse API:", data);
+
+  } catch (error) {
+    console.error("Erreur lors de l'appel API:", error);
+  }
+}
+      
+
+      
+
+      await transporter.sendMail(mailOptions);
+      // user.reference.push(reference);
+      // user.status = status;
+      // await user.save();
+    }
 
     // res.status(200).json({ message: "Webhook traité avec succès." });
   } catch (error) {
