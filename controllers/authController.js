@@ -164,7 +164,7 @@ exports.webhook = async (req, res) => {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.FEEXPAY_TOKEN}`,
+              Authorization: `Bearer ${process.env.FEEXPAY_API_KEY}`,
             },
           }
         );
