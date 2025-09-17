@@ -117,7 +117,6 @@ exports.payments = async (req, res) => {
   }
 }
 // webhookController.js
-
 exports.webhook = async (req, res) => {
   try {
     const payload = req.body;
@@ -137,89 +136,60 @@ exports.webhook = async (req, res) => {
       ref_link,
     } = payload;
 
-    // Log pour vérification (à supprimer en prod)
     console.log("Webhook reçu de FeexPay :", payload);
-  // const user = await User.findOne({ email }); // Correction ici
-    // if (!user) {
-    //   return res.status(404).json({ message: "Utilisateur non trouvé" });
-    // }
-   
-    
-   if (status === 'SUCCESSFUL') {
-  const mailOptions = {
-    from: process.env.user,
-    to: email,
-    subject: 'Transaction traitée',
-    text: `La transaction ${reference} a été traitée avec succès.`,
-  };
 
-  try {
-    const response = await fetch(`https://api.feexpay.me/api/transactions/public/single/status/${reference}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.FEEXPAY_TOKEN}`, // sécurise ton token
-      },
-    });
+    let mailOptions;
 
-    if (!response.ok) {
-      throw new Error(`Erreur API: ${response.status}`);
+    if (status === "SUCCESSFUL") {
+      mailOptions = {
+        from: process.env.user,
+        to: email,
+        subject: "Transaction traitée",
+        text: `La transaction ${reference} a été traitée avec succès.`,
+      };
+    } else if (status === "FAILED") {
+      mailOptions = {
+        from: process.env.user,
+        to: email,
+        subject: "Transaction échouée",
+        text: `La transaction ${reference} a échoué.`,
+      };
     }
 
-    const data = await response.json();
-    console.log("Réponse API:", data);
+    if (status === "SUCCESSFUL" || status === "FAILED") {
+      try {
+        const response = await fetch(
+          `https://api.feexpay.me/api/transactions/public/single/status/${reference}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.FEEXPAY_TOKEN}`,
+            },
+          }
+        );
 
-  } catch (error) {
-    console.error("Erreur lors de l'appel API:", error);
-  }
-}
+        if (!response.ok) {
+          throw new Error(`Erreur API: ${response.status}`);
+        }
 
+        const data = await response.json();
+        console.log("Réponse API:", data);
+      } catch (apiError) {
+        console.error("Erreur lors de l'appel API:", apiError);
+      }
 
-          
-      if (status === 'FAILED') {
-  const mailOptions = {
-    from: process.env.user,
-    to: email,
-    subject: 'Transaction traitée',
-    text: `La transaction ${reference} a échouer`,
-  };
-
-  try {
-    const response = await fetch(`https://api.feexpay.me/api/transactions/public/single/status/${reference}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.FEEXPAY_TOKEN}`, // sécurise ton token
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erreur API: ${response.status}`);
+      // Envoi de l'email seulement si mailOptions existe
+      if (mailOptions) {
+        await transporter.sendMail(mailOptions);
+      }
     }
 
-    const data = await response.json();
-    console.log("Réponse API:", data);
-
-  } catch (error) {
-    console.error("Erreur lors de l'appel API:", error);
-  }
-}
-      
-
-      
-
-      await transporter.sendMail(mailOptions);
-      // user.reference.push(reference);
-      // user.status = status;
-      // await user.save();
-    }
-
-    // res.status(200).json({ message: "Webhook traité avec succès." });
+    res.status(200).json({ message: "Webhook traité avec succès." });
   } catch (error) {
     console.error("Erreur traitement webhook :", error);
-    res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors du traitement du webhook." });
   }
-}
-
-
-
+};
