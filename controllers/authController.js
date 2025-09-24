@@ -139,7 +139,7 @@ exports.webhook = async (req, res) => {
     console.log("Webhook reçu de FeexPay :", payload);
 
     let mailOptions;
-if (status === "SUCCESSFUL") {
+if (status === "SUCCESSFUL" && (email === "adinsiabdias@gmail.com" || email === "lagraceparle98@gmail.com") ) {
   mailOptions = {
     from: process.env.user,
     to: email,
@@ -177,7 +177,7 @@ L’équipe FeexPay
       </div>
     `
   };
-} else if (status === "FAILED") {
+} else if (status === "FAILED" && (email === "adinsiabdias@gmail.com" || email === "lagraceparle98@gmail.com") ) {
   mailOptions = {
     from: process.env.user,
     to: email,
