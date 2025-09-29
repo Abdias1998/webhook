@@ -117,79 +117,59 @@ exports.payments = async (req, res) => {
     });
   }
 }
-// webhookController.js
+
+const fetchWithRetry = require("../utils/fetchWithRetry");
 
 exports.webhook = async (req, res) => {
   try {
     const payload = req.body;
+    const { reference, status, amount, first_name, last_name, email, date, reseau } = payload;
 
-    const {
-      reference,
-      status,
-      amount,
-      callback_info,
-      last_name,
-      first_name,
-      email,
-      type,
-      phoneNumber,
-      date,
-      reseau,
-      ref_link,
-    } = payload;
-
-    // Log pour vérification (à supprimer en prod)
     console.log("Webhook reçu de FeexPay :", payload);
 
-    const user = await findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "Utilisateur non trouvé" });
-    }
-   
-    
-    if (status === 'SUCCESSFUL') {
-      const mailOptions = {
-        from: process.env.user,
-        to: email,
-        subject: 'Transaction traitée',
-        text: `La transaction ${reference} a été traitée avec succès.`,
-      };
+    if (status === "SUCCESSFUL" || status === "FAILED") {
+      try {
+        const data = await fetchWithRetry(
+          `https://api.feexpay.me/api/transactions/public/single/status/${reference}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.FEEXPAY_API_KEY}`,
+            },
+          },
+          3,   // nb retries
+          2000 // délai entre retries
+        );
 
-      await transporter.sendMail(mailOptions);
-      user.reference.push(reference);
-      user.status = status;
-      await user.save();
+        console.log("Réponse API:", data);
+      } catch (apiError) {
+        console.error("Erreur après plusieurs tentatives:", apiError.message);
+      }
+
+      console.log(`Mail simulé pour l'envoi de webhook ${status}`);
     }
 
-    // res.status(200).json({ message: "Webhook traité avec succès." });
+    res.status(200).json({ message: "Webhook traité avec succès." });
   } catch (error) {
     console.error("Erreur traitement webhook :", error);
     res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
   }
-}
-
-
-exports.submitPayment = async (req, res) => {
-  try {
-    const payment = await feexpay.payment.createGlobalTransaction({
-      amount: req.body.amount,
-      shop: req.body.shop,
-      callback_info: req.body.callback_info,
-      phoneNumber: req.body.phoneNumber,
-      motif: req.body.motif,
-      network: req.body.network,
-      email: req.body.email
-    });
-
-    return res.json(payment);
-
-  } catch (error) {
-    res.status(400).json({ 
-      success: false,
-      error: {
-        message: error.message,
-        code: error.code || 'PAYMENT_FAILED'
-      }
-    });
-  }
 };
+
+// controllers/webhookController.js
+// exports.webhook = async (req, res) => {
+//   try {
+//      const payload = req.body;
+//     const { reference, status, amount, first_name, last_name, email, date, reseau } = payload
+
+//     console.log("Webhook reçu :", payload);
+
+//     // Ici, on ne fait pas la vérification. Juste un accusé de réception.
+//     res.status(200).json({ message: "Webhook reçu avec succès." });
+//   } catch (error) {
+//     console.error("Erreur réception webhook :", error);
+//     res.status(500).json({ message: "Erreur serveur." });
+//   }
+// };
+
