@@ -246,9 +246,9 @@ L’équipe FeexPay
     //     await transporter.sendMail(mailOptions);
     //   }
     // }
-     if (mailOptions) {
-        await transporter.sendMail(mailOptions);
-      }
+     // if (mailOptions) {
+     //    await transporter.sendMail(mailOptions);
+     //  }
   
 
     res.status(200).json({ message: "Webhook traité avec succès." });
