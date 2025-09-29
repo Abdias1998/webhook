@@ -116,111 +116,19 @@ exports.payments = async (req, res) => {
     });
   }
 }
-// webhookController.js
+
+const fetchWithRetry = require("../utils/fetchWithRetry");
+
 exports.webhook = async (req, res) => {
   try {
     const payload = req.body;
-
-    const {
-      reference,
-      status,
-      amount,
-      callback_info,
-      last_name,
-      first_name, 
-      email,
-      type,
-      phoneNumber,
-      date,
-      reseau,
-      ref_link,
-    } = payload;
+    const { reference, status, amount, first_name, last_name, email, date, reseau } = payload;
 
     console.log("Webhook reçu de FeexPay :", payload);
 
-    let mailOptions;
-if (status === "SUCCESSFUL") {
-  mailOptions = {
-    from: process.env.user,
-    to: email,
-    subject: "✅ Transaction traitée avec succès",
-    text: `Ceci est un mail de Test d'envoi de webhook. Bonjour ${first_name || ""} ${last_name || ""},
-
-Votre transaction ${reference} d’un montant de ${amount} XOF a été traitée avec succès le ${new Date(date).toLocaleString()}.
-
-Merci d’avoir utilisé notre service.
-
--- 
-L’équipe FeexPay
-    `,
-    html: `
-      <div style="font-family: Arial, sans-serif; padding: 20px; background:#f9f9f9;">
-        <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 0 5px rgba(0,0,0,0.1);">
-          <div style="background:#4CAF50;color:#fff;padding:15px;text-align:center;">
-            <h2>Transaction réussie ✅</h2>
-          </div>
-          <div style="padding:20px;color:#333;">
-            <p>Bonjour <b>${first_name || ""} ${last_name || ""}</b>,</p>
-            <p>Nous avons le plaisir de vous informer que votre transaction a été <b>traitée avec succès</b>.</p>
-            <ul>
-              <li><b>Référence :</b> ${reference}</li>
-              <li><b>Montant :</b> ${amount} XOF</li>
-              <li><b>Date :</b> ${new Date(date).toLocaleString()}</li>
-              <li><b>Réseau :</b> ${reseau}</li>
-            </ul>
-            <p>Merci d’avoir choisi <b>FeexPay</b> 🚀</p>
-          </div>
-          <div style="background:#f1f1f1;padding:10px;text-align:center;font-size:12px;color:#777;">
-            © ${new Date().getFullYear()} FeexPay - Tous droits réservés
-          </div>
-        </div>
-      </div>
-    `
-  };
-} else if (status === "FAILED" ) {
-  mailOptions = {
-    from: process.env.user,
-    to: email,
-    subject: "❌ Transaction échouée",
-    text: `Ceci est un mail de Test d'envoi de webhook. Bonjour ${first_name || ""} ${last_name || ""},
-
-Votre transaction ${reference} d’un montant de ${amount} XOF a échoué le ${new Date(date).toLocaleString()}.
-
-Si vous pensez qu’il s’agit d’une erreur, merci de contacter le support FeexPay.
-
--- 
-L’équipe FeexPay
-    `,
-    html: `
-      <div style="font-family: Arial, sans-serif; padding: 20px; background:#f9f9f9;">
-        <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 0 5px rgba(0,0,0,0.1);">
-          <div style="background:#E53935;color:#fff;padding:15px;text-align:center;">
-            <h2>Transaction échouée ❌</h2>
-          </div>
-          <div style="padding:20px;color:#333;">
-            <p>Bonjour <b>${first_name || ""} ${last_name || ""}</b>,</p>
-            <p>Votre transaction a malheureusement <b>échoué</b>. Voici les détails :</p>
-            <ul>
-              <li><b>Référence :</b> ${reference}</li>
-              <li><b>Montant :</b> ${amount} XOF</li>
-              <li><b>Date :</b> ${new Date(date).toLocaleString()}</li>
-              <li><b>Réseau :</b> ${reseau}</li>
-            </ul>
-            <p>Si vous pensez qu’il s’agit d’une erreur, veuillez <a href="mailto:support@feexpay.me">contacter notre support</a>.</p>
-          </div>
-          <div style="background:#f1f1f1;padding:10px;text-align:center;font-size:12px;color:#777;">
-            © ${new Date().getFullYear()} FeexPay - Tous droits réservés
-          </div>
-        </div>
-      </div>
-    `
-  };
-}
-
-
     if (status === "SUCCESSFUL" || status === "FAILED") {
       try {
-        const response = await fetch(
+        const data = await fetchWithRetry(
           `https://api.feexpay.me/api/transactions/public/single/status/${reference}`,
           {
             method: "GET",
@@ -228,33 +136,22 @@ L’équipe FeexPay
               "Content-Type": "application/json",
               Authorization: `Bearer ${process.env.FEEXPAY_API_KEY}`,
             },
-          }
+          },
+          3,   // nb retries
+          2000 // délai entre retries
         );
 
-        if (!response.ok) {
-          throw new Error(`Erreur API: ${response.status}`);
-        }
-
-        const data = await response.json();
         console.log("Réponse API:", data);
       } catch (apiError) {
-        console.error("Erreur lors de l'appel API:", apiError);
+        console.error("Erreur après plusieurs tentatives:", apiError.message);
       }
 
-     // Envoi de l'email seulement si mailOptions existe
-      if (mailOptions) {
-        // await transporter.sendMail(mailOptions);
-        console.log(`Mail simulé pour l'envoi de webhook ${status}`)
-      }
+      console.log(`Mail simulé pour l'envoi de webhook ${status}`);
     }
-
-  
 
     res.status(200).json({ message: "Webhook traité avec succès." });
   } catch (error) {
     console.error("Erreur traitement webhook :", error);
-    res
-      .status(500)
-      .json({ message: "Erreur serveur lors du traitement du webhook." });
+    res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
   }
 };
