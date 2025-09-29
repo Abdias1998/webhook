@@ -139,7 +139,7 @@ exports.webhook = async (req, res) => {
     console.log("Webhook reçu de FeexPay :", payload);
 
     let mailOptions;
-if (status === "SUCCESSFUL" && (email === "adinsiabdias@gmail.com" || email === "lagraceparle98@gmail.com") ) {
+if (status === "SUCCESSFUL") {
   mailOptions = {
     from: process.env.user,
     to: email,
@@ -177,7 +177,7 @@ L’équipe FeexPay
       </div>
     `
   };
-} else if (status === "FAILED" && (email === "adinsiabdias@gmail.com" || email === "lagraceparle98@gmail.com") ) {
+} else if (status === "FAILED" ) {
   mailOptions = {
     from: process.env.user,
     to: email,
@@ -218,7 +218,7 @@ L’équipe FeexPay
 }
 
 
-    if (status === "SUCCESSFUL" || status === "FAILED") {
+    if (status === "PENDING") {
       try {
         const response = await fetch(
           `https://api.feexpay.me/api/transactions/public/single/status/${reference}`,
