@@ -119,39 +119,55 @@ exports.payments = async (req, res) => {
 
 const fetchWithRetry = require("../utils/fetchWithRetry");
 
+// exports.webhook = async (req, res) => {
+//   try {
+//     const payload = req.body;
+//     const { reference, status, amount, first_name, last_name, email, date, reseau } = payload;
+
+//     console.log("Webhook reçu de FeexPay :", payload);
+
+//     if (status === "SUCCESSFUL" || status === "FAILED") {
+//       try {
+//         const data = await fetchWithRetry(
+//           `https://api.feexpay.me/api/transactions/public/single/status/${reference}`,
+//           {
+//             method: "GET",
+//             headers: {
+//               "Content-Type": "application/json",
+//               Authorization: `Bearer ${process.env.FEEXPAY_API_KEY}`,
+//             },
+//           },
+//           3,   // nb retries
+//           2000 // délai entre retries
+//         );
+
+//         console.log("Réponse API:", data);
+//       } catch (apiError) {
+//         console.error("Erreur après plusieurs tentatives:", apiError.message);
+//       }
+
+//       console.log(`Mail simulé pour l'envoi de webhook ${status}`);
+//     }
+
+//     res.status(200).json({ message: "Webhook traité avec succès." });
+//   } catch (error) {
+//     console.error("Erreur traitement webhook :", error);
+//     res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
+//   }
+// };
+
+// controllers/webhookController.js
 exports.webhook = async (req, res) => {
   try {
     const payload = req.body;
-    const { reference, status, amount, first_name, last_name, email, date, reseau } = payload;
 
-    console.log("Webhook reçu de FeexPay :", payload);
+    console.log("Webhook reçu :", payload);
 
-    if (status === "SUCCESSFUL" || status === "FAILED") {
-      try {
-        const data = await fetchWithRetry(
-          `https://api.feexpay.me/api/transactions/public/single/status/${reference}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.FEEXPAY_API_KEY}`,
-            },
-          },
-          3,   // nb retries
-          2000 // délai entre retries
-        );
-
-        console.log("Réponse API:", data);
-      } catch (apiError) {
-        console.error("Erreur après plusieurs tentatives:", apiError.message);
-      }
-
-      console.log(`Mail simulé pour l'envoi de webhook ${status}`);
-    }
-
-    res.status(200).json({ message: "Webhook traité avec succès." });
+    // Ici, on ne fait pas la vérification. Juste un accusé de réception.
+    res.status(200).json({ message: "Webhook reçu avec succès." });
   } catch (error) {
-    console.error("Erreur traitement webhook :", error);
-    res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
+    console.error("Erreur réception webhook :", error);
+    res.status(500).json({ message: "Erreur serveur." });
   }
 };
+
