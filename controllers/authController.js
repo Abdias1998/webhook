@@ -140,7 +140,7 @@ exports.webhook = async (req, res) => {
 
     if (status === "SUCCESSFUL" || status === "FAILED") {
       try {
-        const data = await fetchWithRetry(
+        const { data, duration } = await fetchWithRetry(
           `https://api.feexpay.me/api/transactions/public/single/status/${reference}`,
           {
             method: "GET",
@@ -149,17 +149,19 @@ exports.webhook = async (req, res) => {
               Authorization: `Bearer ${process.env.FEEXPAY_API_KEY}`,
             },
           },
-          3,   // nb retries
-          2000 // délai entre retries
+          3,
+          2000
         );
-
+    
         console.log("Réponse API:", data);
+        console.log(`Temps de réponse de la requête GET status: ${duration} ms`);
       } catch (apiError) {
         console.error("Erreur après plusieurs tentatives:", apiError.message);
       }
-
+    
       console.log(`Mail simulé pour l'envoi de webhook ${status}`);
     }
+    
 
     res.status(200).json({ message: "Webhook traité avec succès." });
   } catch (error) {

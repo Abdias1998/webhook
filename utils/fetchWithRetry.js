@@ -5,10 +5,13 @@ async function fetchWithRetry(url, options = {}, retries = 3, delay = 2000) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
+      const startTime = Date.now(); // début du timer
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
       });
+      const endTime = Date.now(); // fin du timer
+      const duration = endTime - startTime; // temps en ms
 
       clearTimeout(timeout);
 
@@ -16,18 +19,20 @@ async function fetchWithRetry(url, options = {}, retries = 3, delay = 2000) {
         throw new Error(`Erreur API: ${response.status}`);
       }
 
-      return await response.json(); // si ça marche, on sort
+      const data = await response.json();
+
+      return { data, duration }; // on renvoie les données + durée
     } catch (error) {
       console.error(`Tentative ${i + 1} échouée :`, error.message);
 
       if (i === retries - 1) {
-        throw error; // si c’est la dernière tentative, on relance l'erreur
+        throw error;
       }
 
-      // Attendre avant de réessayer
       await new Promise((res) => setTimeout(res, delay));
     }
   }
 }
+
 
 module.exports = fetchWithRetry;
