@@ -6,6 +6,6 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/webhook', authController.webhook);
 router.post('/payment/transaction',authController.payments)
-router.post('/submit-payment', authController.submitPayment);
+// router.post('/submit-payment', authController.submitPayment);
 
-module.exports = router;
+module.exports = router; 

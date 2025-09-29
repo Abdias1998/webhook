@@ -6,6 +6,10 @@ const { createTransport } = require('nodemailer');
 const { Feexpay } = require('feexpay-sdk');
 const mongoose = require('mongoose');
 const Payment = require('../models/payment');
+const path = require('path');
+const fs = require('fs');
+const fetchWithRetry = require("../utils/fetchWithRetry");
+const logger = require("../utils/logger");
 // Initialisation du SDK avec vos clés Feexpay
 const feexpay = new Feexpay(
   process.env.FEEXPAY_API_KEY,
@@ -118,13 +122,20 @@ exports.payments = async (req, res) => {
   }
 }
 
-const fetchWithRetry = require("../utils/fetchWithRetry");
+// Fonction pour logger dans un fichier
+function logWebhook(data) {
+  const logDir = path.join(process.cwd(), "logs");
+  if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
 
+  const logPath = path.join(logDir, "webhook.log");
+  fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${JSON.stringify(data)}\n`);
+}
 exports.webhook = async (req, res) => {
   try {
     const payload = req.body;
     const { reference, status, amount, first_name, last_name, email, date, reseau } = payload;
-
+    logger.info("Webhook reçu", { payload });
+    logWebhook(payload);
     console.log("Webhook reçu de FeexPay :", payload);
 
     if (status === "SUCCESSFUL" || status === "FAILED") {
@@ -152,6 +163,7 @@ exports.webhook = async (req, res) => {
 
     res.status(200).json({ message: "Webhook traité avec succès." });
   } catch (error) {
+    logger.error("Erreur traitement webhook", { error: error.message });
     console.error("Erreur traitement webhook :", error);
     res.status(500).json({ message: "Erreur serveur lors du traitement du webhook." });
   }
