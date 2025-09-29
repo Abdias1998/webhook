@@ -159,7 +159,8 @@ const fetchWithRetry = require("../utils/fetchWithRetry");
 // controllers/webhookController.js
 exports.webhook = async (req, res) => {
   try {
-    const payload = req.body;
+     const payload = req.body;
+    const { reference, status, amount, first_name, last_name, email, date, reseau } = payload
 
     console.log("Webhook reçu :", payload);
 
