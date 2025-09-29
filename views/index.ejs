@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .additional-info {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Payment Form</h1>
+    <form id="paymentForm">
+        <div class="form-group">
+            <label for="country">Pays d'appartenance</label>
+            <select id="country" required>
+                <option value="">Sélectionnez un pays</option>
+                <option value="BJ">Bénin</option>
+                <option value="BF">Burkina Faso</option>
+                <option value="CI">Côte d'Ivoire</option>
+                <option value="SN">Sénégal</option>
+                <option value="TG">Togo</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="network">Réseau mobile</label>
+            <select id="network" required>
+                <option value="">Sélectionnez un réseau</option>
+                <option value="MTN">MTN</option>
+                <option value="MOOV">MOOV</option>
+                <option value="ORANGE">ORANGE</option>
+                <option value="WAVE">WAVE</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="amount">Montant (obligatoire)</label>
+            <input type="number" id="amount" required>
+        </div>
+
+        <div class="form-group">
+            <label for="phoneNumber">Numéro de téléphone (obligatoire)</label>
+            <input type="tel" id="phoneNumber" required>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="showAdditionalInfo"> Fournir des informations supplémentaires
+            </label>
+        </div>
+
+        <div id="additionalInfo" class="additional-info">
+            <div class="form-group">
+                <label for="motif">Motif</label>
+                <input type="text" id="motif">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email">
+            </div>
+
+            <div class="form-group">
+                <label for="firstName">Prénom</label>
+                <input type="text" id="firstName">
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Nom</label>
+                <input type="text" id="lastName">
+            </div>
+        </div>
+
+        <button type="submit">Soumettre</button>
+    </form>
+
+    <div id="responseMessage" style="margin-top: 20px;"></div>
+
+    <script>
+        document.getElementById('showAdditionalInfo').addEventListener('change', function() {
+            const additionalInfo = document.getElementById('additionalInfo');
+            additionalInfo.style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                shop: "671a774c706593edb3dc4ab2",
+                amount: document.getElementById('amount').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                network: document.getElementById('network').value,
+                country: document.getElementById('country').value
+            };
+
+            if (document.getElementById('showAdditionalInfo').checked) {
+                formData.motif = document.getElementById('motif').value;
+                formData.email = document.getElementById('email').value;
+                formData.first_name = document.getElementById('firstName').value;
+                formData.last_name = document.getElementById('lastName').value;
+            }
+
+            try {
+                const response = await fetch('/submit-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('responseMessage').innerHTML = `
+                        <div style="color: green; padding: 10px; background-color: #e8f5e9; border-radius: 4px;">
+                            Paiement réussi: ${result.message || 'Transaction effectuée avec succès'}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('responseMessage').innerHTML = `
+                        <div style="color: red; padding: 10px; background-color: #ffebee; border-radius: 4px;">
+                            Erreur: ${result.error || 'Une erreur est survenue'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('responseMessage').innerHTML = `
+                    <div style="color: red; padding: 10px; background-color: #ffebee; border-radius: 4px;">
+                        Erreur réseau: ${error.message}
+                    </div>
+                `;
+            }
+        });
+        
+    </script>
+</body>
+</html>

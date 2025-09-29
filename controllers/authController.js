@@ -5,6 +5,7 @@ const { sign } = require('jsonwebtoken');
 const { createTransport } = require('nodemailer');
 const { Feexpay } = require('feexpay-sdk');
 const mongoose = require('mongoose');
+const Payment = require('../models/payment');
 // Initialisation du SDK avec vos clés Feexpay
 const feexpay = new Feexpay(
   process.env.FEEXPAY_API_KEY,
@@ -168,4 +169,27 @@ exports.webhook = async (req, res) => {
 }
 
 
+exports.submitPayment = async (req, res) => {
+  try {
+    const payment = await feexpay.payment.createGlobalTransaction({
+      amount: req.body.amount,
+      shop: req.body.shop,
+      callback_info: req.body.callback_info,
+      phoneNumber: req.body.phoneNumber,
+      motif: req.body.motif,
+      network: req.body.network,
+      email: req.body.email
+    });
 
+    return res.json(payment);
+
+  } catch (error) {
+    res.status(400).json({ 
+      success: false,
+      error: {
+        message: error.message,
+        code: error.code || 'PAYMENT_FAILED'
+      }
+    });
+  }
+};
