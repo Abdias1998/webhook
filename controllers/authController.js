@@ -144,7 +144,7 @@ if (status === "SUCCESSFUL") {
     from: process.env.user,
     to: email,
     subject: "✅ Transaction traitée avec succès",
-    text: `Ceci est un mail de Test. Bonjour ${first_name || ""} ${last_name || ""},
+    text: `Ceci est un mail de Test d'envoi de webhook. Bonjour ${first_name || ""} ${last_name || ""},
 
 Votre transaction ${reference} d’un montant de ${amount} XOF a été traitée avec succès le ${new Date(date).toLocaleString()}.
 
@@ -182,7 +182,7 @@ L’équipe FeexPay
     from: process.env.user,
     to: email,
     subject: "❌ Transaction échouée",
-    text: `Ceci est un mail de Test. Bonjour ${first_name || ""} ${last_name || ""},
+    text: `Ceci est un mail de Test d'envoi de webhook. Bonjour ${first_name || ""} ${last_name || ""},
 
 Votre transaction ${reference} d’un montant de ${amount} XOF a échoué le ${new Date(date).toLocaleString()}.
 
