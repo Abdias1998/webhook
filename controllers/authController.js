@@ -244,7 +244,7 @@ L’équipe FeexPay
      // Envoi de l'email seulement si mailOptions existe
       if (mailOptions) {
         // await transporter.sendMail(mailOptions);
-        console.log('Mail simulé')
+        console.log(`Mail simulé pour l'envoi de webhook ${status}`)
       }
     }
 
