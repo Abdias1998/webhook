@@ -242,10 +242,14 @@ L’équipe FeexPay
     //   }
 
       // Envoi de l'email seulement si mailOptions existe
-      if (mailOptions) {
+    //   if (mailOptions) {
+    //     await transporter.sendMail(mailOptions);
+    //   }
+    // }
+     if (mailOptions) {
         await transporter.sendMail(mailOptions);
       }
-    }
+  
 
     res.status(200).json({ message: "Webhook traité avec succès." });
   } catch (error) {
