@@ -241,7 +241,7 @@ L’équipe FeexPay
         console.error("Erreur lors de l'appel API:", apiError);
       }
 
-      Envoi de l'email seulement si mailOptions existe
+     // Envoi de l'email seulement si mailOptions existe
       if (mailOptions) {
         await transporter.sendMail(mailOptions);
       }
